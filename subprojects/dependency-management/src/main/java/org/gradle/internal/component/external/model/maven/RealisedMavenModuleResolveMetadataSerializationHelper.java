@@ -64,7 +64,7 @@ public class RealisedMavenModuleResolveMetadataSerializationHelper extends Abstr
         }
     }
 
-    public ModuleComponentResolveMetadata readMetadata(Decoder decoder, DefaultMavenModuleResolveMetadata resolveMetadata) throws IOException {
+    public ModuleComponentResolveMetadata readMetadata(Decoder decoder, DefaultMavenModuleResolveMetadata resolveMetadata, Map<Integer, MavenDependencyDescriptor> deduplicationDependencyCache) throws IOException {
         Map<String, List<GradleDependencyMetadata>> variantToDependencies = readVariantDependencies(decoder);
         ImmutableList<? extends ComponentVariant> variants = resolveMetadata.getVariants();
         ImmutableList.Builder<AbstractRealisedModuleComponentResolveMetadata.ImmutableRealisedVariantImpl> builder = ImmutableList.builder();
@@ -74,7 +74,6 @@ public class RealisedMavenModuleResolveMetadataSerializationHelper extends Abstr
         }
         ImmutableList<AbstractRealisedModuleComponentResolveMetadata.ImmutableRealisedVariantImpl> realisedVariants = builder.build();
 
-        Map<Integer, MavenDependencyDescriptor> deduplicationDependencyCache = Maps.newHashMap();
         Map<String, ConfigurationMetadata> configurations = readMavenConfigurations(decoder, resolveMetadata, deduplicationDependencyCache);
         ImmutableList<ConfigurationMetadata> derivedVariants = readDerivedVariants(decoder, resolveMetadata, deduplicationDependencyCache);
 
