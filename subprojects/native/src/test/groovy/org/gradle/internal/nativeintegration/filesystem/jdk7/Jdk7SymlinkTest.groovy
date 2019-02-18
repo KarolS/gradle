@@ -106,6 +106,7 @@ class Jdk7SymlinkTest extends Specification {
 
         when:
         createWindowsJunction(new File(testDirectory, 'testDir'), testDirectory.createDir('symDir'))
+        println("IS DIRECTORY " + new File(testDirectory, 'testDir').isDirectory())
 
         then:
         symlink.isSymlink(new File(testDirectory, 'testDir'))
