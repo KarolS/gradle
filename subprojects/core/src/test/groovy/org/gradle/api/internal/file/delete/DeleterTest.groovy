@@ -20,7 +20,6 @@ import org.gradle.api.file.DeleteSpec
 import org.gradle.api.file.UnableToDeleteFileException
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.file.TestFiles
-import org.gradle.internal.time.Time
 import org.gradle.test.fixtures.file.TestFile
 import org.gradle.test.fixtures.file.TestNameTestDirectoryProvider
 import org.gradle.util.Requires
@@ -260,8 +259,9 @@ class DeleterTest extends Specification {
             @Override
             protected boolean deleteFile(File file) {
                 if (file.canonicalFile == triggerFile.canonicalFile) {
-                    newFile.text = ""
-                    newFile.setLastModified(Time.currentTimeMillis() + 1)
+                    if (!newFile.exists()) {
+                        newFile.text = ""
+                    }
                 }
                 return super.deleteFile(file)
             }
@@ -295,7 +295,9 @@ class DeleterTest extends Specification {
             @Override
             protected boolean deleteFile(File file) {
                 if (file.canonicalFile == nonDeletable.canonicalFile) {
-                    newFile.text = ""
+                    if (!newFile.exists()) {
+                        newFile.text = ""
+                    }
                     return false
                 }
                 return super.deleteFile(file)
@@ -335,7 +337,7 @@ class DeleterTest extends Specification {
             @Override
             protected boolean deleteFile(File file) {
                 triedToDelete << file
-                newFiles.each { it.text = "" }
+                newFiles.findAll { !it.exists() }.each { it.text = "" }
                 return false;
             }
         }
