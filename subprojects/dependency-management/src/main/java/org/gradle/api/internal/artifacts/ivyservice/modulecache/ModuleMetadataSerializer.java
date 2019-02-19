@@ -301,7 +301,6 @@ public class ModuleMetadataSerializer {
         private void writeMavenDependency(MavenDependencyDescriptor mavenDependency, Map<ExternalDependencyDescriptor, Integer> deduplicationDependencyCache) throws IOException {
             int nextMapping = deduplicationDependencyCache.size();
             Integer mapping = deduplicationDependencyCache.putIfAbsent(mavenDependency, nextMapping);
-            encoder.writeBoolean(mapping != null);
             if (mapping != null) {
                 // Save a reference to the dependency that was written before
                 encoder.writeSmallInt(mapping);
@@ -655,12 +654,8 @@ public class ModuleMetadataSerializer {
         }
 
         private MavenDependencyDescriptor readMavenDependency(Map<Integer, MavenDependencyDescriptor> deduplicationDependencyCache) throws IOException {
-            if (decoder.readBoolean()) {
-                MavenDependencyDescriptor mavenDependencyDescriptor = deduplicationDependencyCache.get(decoder.readSmallInt());
-                assert mavenDependencyDescriptor != null;
-                return mavenDependencyDescriptor;
-            } else {
-                int mapping = decoder.readSmallInt();
+            int mapping = decoder.readSmallInt();
+            if (mapping == deduplicationDependencyCache.size()) {
                 ModuleComponentSelector requested = componentSelectorSerializer.read(decoder);
                 IvyArtifactName artifactName = readNullableArtifact();
                 List<ExcludeMetadata> mavenExcludes = readMavenDependencyExcludes();
@@ -668,6 +663,10 @@ public class ModuleMetadataSerializer {
                 MavenDependencyType type = MavenDependencyType.values()[decoder.readSmallInt()];
                 MavenDependencyDescriptor mavenDependencyDescriptor = new MavenDependencyDescriptor(scope, type, requested, artifactName, mavenExcludes);
                 deduplicationDependencyCache.put(mapping, mavenDependencyDescriptor);
+                return mavenDependencyDescriptor;
+            } else {
+                MavenDependencyDescriptor mavenDependencyDescriptor = deduplicationDependencyCache.get(mapping);
+                assert mavenDependencyDescriptor != null;
                 return mavenDependencyDescriptor;
             }
         }

@@ -221,12 +221,8 @@ public class RealisedMavenModuleResolveMetadataSerializationHelper extends Abstr
     }
 
     private MavenDependencyDescriptor readMavenDependency(Decoder decoder, Map<Integer, MavenDependencyDescriptor> deduplicationDependencyCache) throws IOException {
-        if (decoder.readBoolean()) {
-            MavenDependencyDescriptor mavenDependencyDescriptor = deduplicationDependencyCache.get(decoder.readSmallInt());
-            assert mavenDependencyDescriptor != null;
-            return mavenDependencyDescriptor;
-        } else {
-            int mapping = decoder.readSmallInt();
+        int mapping = decoder.readSmallInt();
+        if (mapping == deduplicationDependencyCache.size()) {
             ModuleComponentSelector requested = getComponentSelectorSerializer().read(decoder);
             IvyArtifactName artifactName = readNullableArtifact(decoder);
             List<ExcludeMetadata> mavenExcludes = readMavenExcludes(decoder);
@@ -235,13 +231,16 @@ public class RealisedMavenModuleResolveMetadataSerializationHelper extends Abstr
             MavenDependencyDescriptor mavenDependencyDescriptor = new MavenDependencyDescriptor(scope, type, requested, artifactName, mavenExcludes);
             deduplicationDependencyCache.put(mapping, mavenDependencyDescriptor);
             return mavenDependencyDescriptor;
+        } else {
+            MavenDependencyDescriptor mavenDependencyDescriptor = deduplicationDependencyCache.get(mapping);
+            assert mavenDependencyDescriptor != null;
+            return mavenDependencyDescriptor;
         }
     }
 
     private void writeMavenDependency(Encoder encoder, MavenDependencyDescriptor mavenDependency, Map<ExternalDependencyDescriptor, Integer> deduplicationDependencyCache) throws IOException {
         int nextMapping = deduplicationDependencyCache.size();
         Integer mapping = deduplicationDependencyCache.putIfAbsent(mavenDependency, nextMapping);
-        encoder.writeBoolean(mapping != null);
         if (mapping != null) {
             encoder.writeSmallInt(mapping);
         } else {
