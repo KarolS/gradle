@@ -24,6 +24,8 @@ import org.junit.Rule
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import java.nio.file.Files
+
 class Jdk7SymlinkTest extends Specification {
 
     @Rule TestNameTestDirectoryProvider temporaryFolder
@@ -107,6 +109,7 @@ class Jdk7SymlinkTest extends Specification {
         when:
         createWindowsJunction(new File(testDirectory, 'testDir'), testDirectory.createDir('symDir'))
         println("IS DIRECTORY " + new File(testDirectory, 'testDir').isDirectory())
+        println("IS SYMBOLIC LINK " + Files.isSymbolicLink(new File(testDirectory, 'testDir').toPath()))
 
         then:
         symlink.isSymlink(new File(testDirectory, 'testDir'))

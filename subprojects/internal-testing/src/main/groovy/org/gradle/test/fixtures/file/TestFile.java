@@ -642,7 +642,7 @@ public class TestFile extends File {
      */
     public TestFile forceDeleteDir() throws IOException {
         if (isDirectory()) {
-            if (FileUtils.isSymlink(this)) {
+            if (Files.isSymbolicLink(this.toPath())) {
                 if (!delete()) {
                     throw new IOException("Unable to delete symlink: " + getCanonicalPath());
                 }
