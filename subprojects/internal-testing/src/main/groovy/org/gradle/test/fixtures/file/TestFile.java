@@ -645,9 +645,13 @@ public class TestFile extends File {
      * Windows junctions aren't considered as symbolic links by Java. They need to be detected by checking if they are directories and have the other attribute flag set.
      */
     public boolean isJunction() {
+        return isJunction(toPath());
+    }
+
+    private static boolean isJunction(Path path) {
         if (OperatingSystem.current().isWindows()) {
             try {
-                BasicFileAttributes attributes = Files.readAttributes(toPath(), BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
                 return attributes.isDirectory() && attributes.isOther();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -675,6 +679,17 @@ public class TestFile extends File {
                             errorPaths.add(file.toFile().getCanonicalPath());
                         }
                         return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                        if (isJunction(dir)) {
+                            if (!dir.toFile().delete()) {
+                                errorPaths.add(dir.toFile().getCanonicalPath());
+                            }
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+                        return super.preVisitDirectory(dir, attrs);
                     }
 
                     @Override
