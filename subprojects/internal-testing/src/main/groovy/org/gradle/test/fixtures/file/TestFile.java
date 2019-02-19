@@ -640,11 +640,28 @@ public class TestFile extends File {
     }
 
     /**
+     * Returns {@code true} if this file is a Windows junction points or {@code false} otherwise.
+     *
+     * Windows junctions aren't considered as symbolic links by Java. They need to be detected by checking if they are directories and have the other attribute flag set.
+     */
+    public boolean isJunction() {
+        if (OperatingSystem.current().isWindows()) {
+            try {
+                BasicFileAttributes attributes = Files.readAttributes(toPath(), BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+                return attributes.isDirectory() && attributes.isOther();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        return false;
+    }
+
+    /**
      * Recursively delete this directory, reporting all failed paths.
      */
     public TestFile forceDeleteDir() throws IOException {
         if (isDirectory()) {
-            if (Files.isSymbolicLink(this.toPath()) || (OperatingSystem.current().isWindows() && Files.readAttributes(this.toPath(), BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS).isOther())) {
+            if (FileUtils.isSymlink(this) || isJunction()) {
                 if (!delete()) {
                     throw new IOException("Unable to delete symlink: " + getCanonicalPath());
                 }
