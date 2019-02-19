@@ -29,6 +29,7 @@ import org.gradle.internal.hash.Hashing;
 import org.gradle.internal.hash.HashingOutputStream;
 import org.gradle.internal.nativeintegration.filesystem.FileSystem;
 import org.gradle.internal.nativeintegration.services.NativeServices;
+import org.gradle.internal.os.OperatingSystem;
 import org.gradle.testing.internal.util.RetryUtil;
 import org.hamcrest.Matcher;
 
@@ -45,6 +46,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -642,7 +644,7 @@ public class TestFile extends File {
      */
     public TestFile forceDeleteDir() throws IOException {
         if (isDirectory()) {
-            if (Files.isSymbolicLink(this.toPath())) {
+            if (Files.isSymbolicLink(this.toPath()) || (OperatingSystem.current().isWindows() && Files.readAttributes(this.toPath(), BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS).isOther())) {
                 if (!delete()) {
                     throw new IOException("Unable to delete symlink: " + getCanonicalPath());
                 }
