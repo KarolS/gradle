@@ -18,6 +18,8 @@ package org.gradle.internal.component.model;
 
 import org.gradle.api.internal.attributes.CompatibilityCheckResult;
 
+import java.util.Objects;
+
 public class DefaultCompatibilityCheckResult<T> implements CompatibilityCheckResult<T> {
     private final T consumerValue;
     private final T producerValue;
@@ -25,6 +27,7 @@ public class DefaultCompatibilityCheckResult<T> implements CompatibilityCheckRes
     private boolean done;
 
     public DefaultCompatibilityCheckResult(T consumerValue, T producerValue) {
+        assert !Objects.equals(consumerValue, producerValue);
         this.consumerValue = consumerValue;
         this.producerValue = producerValue;
     }

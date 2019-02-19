@@ -413,13 +413,13 @@ public class DependencyGraphBuilder {
     }
 
     private static boolean compatible(CompatibilityRule<Object> rule, Object v1, Object v2) {
+        if (Objects.equal(v1, v2)) {
+            // Equal values are compatible
+            return true;
+        }
         DefaultCompatibilityCheckResult<Object> result = new DefaultCompatibilityCheckResult<>(v1, v2);
         rule.execute(result);
-        if (!result.hasResult()) {
-            // the rule said nothing, so we use equality
-            return Objects.equal(v1, v2);
-        }
-        return result.isCompatible();
+        return result.hasResult() && result.isCompatible();
     }
 
     private void attachMultipleForceOnPlatformFailureToEdges(ModuleResolveState module) {
